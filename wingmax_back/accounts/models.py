@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager
 from django.forms import ValidationError
-from flights.models import Country
+
 
 
 #  Custom User Manager
@@ -109,7 +109,7 @@ class Customer(models.Model):
     last_name = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=50,unique=True, blank=True, null=True)
     address = models.CharField(max_length=50, blank=True, null=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    country = models.CharField(max_length=50,blank=True, null=True)
     state = models.CharField(max_length=50,blank=True, null=True)
     city = models.CharField(max_length=50,blank=True, null=True)
     zip_code = models.CharField(max_length=50,blank=True, null=True)
@@ -129,7 +129,7 @@ class Airline(models.Model):
     airline_logo = models.ImageField(upload_to='accounts/airline_logos', blank=True, null=True)
     name = models.CharField(max_length=50, unique=True)
     iata_code = models.CharField(max_length=2, unique=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    country = models.CharField(max_length=50,blank=True, null=True)
     phone_number = models.CharField(max_length=50,unique=True, blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)

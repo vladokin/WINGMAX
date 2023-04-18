@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager
 from django.forms import ValidationError
+from flights.models import Country
 
 
 #  Custom User Manager
@@ -28,6 +29,7 @@ class UserManager (BaseUserManager):
                 username = username,
                 password = password,
             )
+            user.is_active = True
             user.is_admin = True
             user.is_staff = True
             user.is_superuser = True
@@ -38,12 +40,12 @@ class UserManager (BaseUserManager):
 #  Custom User model
 class User(AbstractBaseUser):
     #  Definition of the available user roles
-    ADMIN = 1
+    ADMINISTRATOR = 1
     CUSTOMER = 2
     AIRLINE = 3
     
     ROLE_CHOICES = (
-        (ADMIN, 'Admin'),
+        (ADMINISTRATOR, 'Administrator'),
         (CUSTOMER, 'Customer'),
         (AIRLINE, 'Airline')
     )
@@ -83,9 +85,74 @@ class User(AbstractBaseUser):
         return True
     
     def get_role(self):
-        if self.role == 1:
-            return 'Admin'
-        elif self.role == 2:
-            return 'Customer'
-        elif self.role == 3:
-            return 'Airline'
+        '''Returns the role of the user as a string'''
+        return {
+            1: 'Administrator',
+            2: 'Customer',
+            3: 'Airline',
+        }.get(self.role)
+
+    def save(self, *args, **kwargs):
+        '''Prevent the user role from being changed'''
+        if self.pk:
+            original = User.objects.get(pk=self.pk)
+            if original.role != self.role:
+                raise ValueError('User role cannot be changed')
+        super().save(*args, **kwargs)
+
+
+#  Customer model
+class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,)
+    profile_photo = models.ImageField(upload_to='accounts/profile_photos', blank=True, null=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=50,unique=True, blank=True, null=True)
+    address = models.CharField(max_length=50, blank=True, null=True)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    state = models.CharField(max_length=50,blank=True, null=True)
+    city = models.CharField(max_length=50,blank=True, null=True)
+    zip_code = models.CharField(max_length=50,blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    
+    #  Set first_name and last_name fields as required
+    REQUIRED_FIELDS = ['first_name','last_name']
+    
+    def __str__(self):
+        return self.user.username    
+
+
+#  Airline model
+class Airline(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,)
+    airline_logo = models.ImageField(upload_to='accounts/airline_logos', blank=True, null=True)
+    name = models.CharField(max_length=50, unique=True)
+    iata_code = models.CharField(max_length=2, unique=True)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    phone_number = models.CharField(max_length=50,unique=True, blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    
+    #  Set name and iata_code fields as required
+    REQUIRED_FIELDS = ['name','iata_code']
+    
+    def __str__(self):
+        return self.user.username
+
+
+#  Administrator model
+class Administrator(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,)
+    profile_photo = models.ImageField(upload_to='accounts/profile_photos', blank=True, null=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=50,unique=True, blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    
+    #  Set first_name and last_name fields as required
+    REQUIRED_FIELDS = ['first_name','last_name']
+    
+    def __str__(self):
+        return self.user.username

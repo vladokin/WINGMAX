@@ -1,0 +1,12 @@
+{% autoescape off %}
+
+Hi {{ user.username }},
+
+Thank you for registering at WINGMAX.
+
+To activate your account, click this link:
+http;//{{domain}}{% url 'accounts:activate' uidb64=uid token=token %}
+
+
+
+{% autoescape %}

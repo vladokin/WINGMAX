@@ -29,7 +29,7 @@ class UserManager (BaseUserManager):
                 username = username,
                 password = password,
             )
-            user.role = 'Administrator'
+            user.role = user.ADMINISTRATOR
             user.is_active = True
             user.is_admin = True
             user.is_staff = True
@@ -97,7 +97,7 @@ class User(AbstractBaseUser):
         '''Prevent the user role from being changed'''
         if self.pk:
             original = User.objects.get(pk=self.pk)
-            if original.role != self.role:
+            if original.role and original.role != self.role:
                 raise ValueError('User role cannot be changed')
         super().save(*args, **kwargs)
 

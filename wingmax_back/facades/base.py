@@ -42,16 +42,15 @@ class BaseFacade(ABC):
         except Airline.DoesNotExist:
             return None
     
-    def create_user(self, request, email, username, role, password1, password2):
+    def create_user(self, request):
         '''Creates a new user.'''
         try:
-            user = User.objects.create_user(email=email, username=username, role=role,)
-            password = password1 if password1 == password2 else None
+            data = request.data
+            password = data['password1'] if data['password1'] == data['password2'] else None
+            user = User.objects.create(email=data['email'], username=data['username'])
             user.set_password(password)
             user.save()
-            email_subject = 'Activate your account'
-            email_template = 'emails/account_verification_email.html'
-            send_verification_email(request, user, email_subject, email_template)
+            send_verification_email(request, user)
             return user
         except Exception as e:
             return None

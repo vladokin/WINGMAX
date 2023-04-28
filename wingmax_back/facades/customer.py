@@ -4,7 +4,7 @@ from flights.models import Flight, Ticket
 
 
 class CustomerFacade(BaseFacade):
-    def ubdate_customer(self, customer_id, profile_photo, first_name, last_name, phone_number, address, state, country, city, zip_code):
+    def update_customer(self, customer_id, profile_photo, first_name, last_name, phone_number, address, state, country, city, zip_code):
         '''Updates a customer profile.'''
         try:
             customer = Customer.objects.get(pk=customer_id)

@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from .base import BaseFacade
-from accounts.models import Customer, Airline
+from accounts.models import Customer, Airline, User
 
 
 class AnonymousFacade(BaseFacade):
@@ -12,22 +12,29 @@ class AnonymousFacade(BaseFacade):
         else:
             return None
 
-    def create_customer(self, request, first_name, last_name, email, username, password1, password2):
+    def create_customer(self, request):
         '''Creates a new customer.'''
         try:
-            user =  super.create_user(request, email, username, password1, password2)
-            user.role = 'Customer'
-            customer = Customer.objects.create(user=user, first_name=first_name, last_name=last_name)
+            data = request.data
+            user =  super().create_user(request)
+            user.role = User.CUSTOMER
+            user.save()
+            customer = Customer.objects.create(user=user, first_name=data['first_name'], last_name=data['last_name'])
+            customer.save()
             return customer
         except Exception as e:
             return None
     
-    def create_airline(self, request, name, iata_code, email, username, password1, password2):
+    def create_airline(self, request):
         '''Creates a new airline.'''
         try:
-            user =  super.create_user(request, email, username, password1, password2)
-            user.role = 'Airline'
-            airline = Airline.objects.create(user=user, name=name, iata_code=iata_code)
+            data = request.data
+            user =  super().create_user(request)
+            user.role = User.AIRLINE
+            user.save()
+            airline = Airline.objects.create(user=user,iata_code=data['iata_code'], name=data['name'])
+            airline.save()
             return airline
         except Exception as e:
             return None
+        

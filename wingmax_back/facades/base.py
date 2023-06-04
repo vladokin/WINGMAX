@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from abc import ABC
 from flights.models import Flight
 from accounts.models import Airline,User
@@ -10,6 +11,13 @@ class BaseFacade(ABC):
         '''Returns all the flights.'''
         return Flight.objects.all()
     
+    def get_flights_by_airline(self, airline):
+        '''Returns all the flights of an airline.'''
+        try:
+            return Flight.objects.filter(airline=airline)
+        except Flight.DoesNotExist:
+            return None
+    
     def get_flight_by_id(self, flight_id):
         '''Returns a flight by its id.'''
         try:
@@ -21,6 +29,24 @@ class BaseFacade(ABC):
         '''Returns a flight by its route.'''
         try:
             return Flight.objects.get(departure_airport=departure_airport, arrival_airport=arrival_airport)
+        except Flight.DoesNotExist:
+            return None
+    
+    def get_arrival_flights(country):
+        '''Returns all the flights arriving to a country in the next 12 hours.'''
+        current_time = datetime.now()
+        time_after_12_hours = current_time + timedelta(hours=12)
+        try:
+            return Flight.objects.filter(arrival_airport__country=country, arrival_time__gte=current_time, arrival_time__lte=time_after_12_hours)
+        except Flight.DoesNotExist:
+            return None
+
+    def get_departure_flights(country):
+        '''Returns all the flights departing from a country in the next 12 hours.'''
+        current_time = datetime.now()
+        time_after_12_hours = current_time + timedelta(hours=12)
+        try:
+            return Flight.objects.filter(departure_airport__country=country, departure_time__gte=current_time, departure_time__lte=time_after_12_hours)
         except Flight.DoesNotExist:
             return None
     
@@ -59,23 +85,24 @@ class BaseFacade(ABC):
         '''Activates a user account.'''
         return activate_user(uidb64, token)
 
-    def forgot_password(self, request, email):
+    def forgot_password(self, request,):
         '''Sends a password reset email to the user.'''
         try:
+            email = request.data['email']
             user = User.objects.get(email=email)
-            email_subject = 'Reset your password'
-            email_template = 'emails/account_password_reset_email.html'
-            send_password_reset_email(request, user, email_subject, email_template)
+            send_password_reset_email(request, user,)
             return True
         except User.DoesNotExist:
             return False
     
-    def reset_password(self, user, password1, password2):
+    def reset_password(self, request):
         '''Resets a user password.'''
         try:
-            password = password1 if password1 == password2 else None
+            user = request.user
+            data = request.data
+            password = data['password1'] if data['password1'] == data['password2'] else None
             user.set_password(password)
             user.save()
-            return True
+            return user
         except Exception as e:
-            return False
+            return None

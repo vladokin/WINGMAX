@@ -51,11 +51,6 @@ class AirlineFacade(BaseFacade):
         except Flight.DoesNotExist:
             return False
     
-    def get_all_flights(self, airline_id):
+    def get_all_flights(self, airline):
         '''Returns all the flights of an airline.'''
-        try:
-            airline = Airline.objects.get(pk=airline_id)
-            return airline.flights.all()
-        except Airline.DoesNotExist:
-            return None
-    
+        return super().get_flights_by_airline(airline)

@@ -64,19 +64,23 @@ def send_password_email(request, user, email_subject, email_template):
     mail.send()
 
 
-def send_password_reset_email(request, user, email_subject, email_template):
+def send_password_reset_email(request, user):
     '''Sends an email to the user with a link to reset his password.'''
-    from_email = settings.DEFAULT_FROM_EMAIL
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
     current_site = get_current_site(request)
-    massage = render_to_string(email_template, {
+    subject = 'Password Reset'
+    message =   render_to_string('accounts/account_password_reset_email.html', {
         'user': user,
         'domain': current_site.domain,
-        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-        'token' : default_token_generator.make_token(user),
+        'uid': uid,
+        'token': token,
     })
-    to_email = user.email
-    mail = EmailMessage(email_subject, massage, from_email, to=[to_email])
-    mail.send()
+    email_from = settings.EMAIL_HOST_USER
+    recipient_list = [str(user.email),]
+    
+    send_mail( subject, '', email_from, recipient_list, html_message=message, fail_silently=False )
+    return ()
 
 
 def password_reset_decoder(uidb64, token):
